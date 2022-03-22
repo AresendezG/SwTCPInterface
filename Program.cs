@@ -15,6 +15,8 @@ namespace SwTCPInterface
         static void Main(string[] args)
         {
             string UserOption="none";
+            string ItemType = "nothing";
+            int ItemCount = 0;
             int ApiReturn = -100;
 
             SimpleTcpServer ServerObject = new SimpleTcpServer
@@ -50,6 +52,7 @@ namespace SwTCPInterface
             // Console mode
             while (UserOption != "exit")
             {
+                StringBuilder ItemName = new StringBuilder(1000);
                 Console.WriteLine("Type your Option:");
                 UserOption = Console.ReadLine();
                 UserOption = UserOption.ToLower();
@@ -64,11 +67,72 @@ namespace SwTCPInterface
                         ApiReturn = ScanWorksAPI.sw_disconnect();
                         Console.WriteLine("API Return for Disconnect: " + ApiReturn);
                         break;
-                    case "getprojectcount":
-                        ApiReturn = ScanWorksAPI.sw_GetProjectCount();
-                        Console.WriteLine("The Project count is: " + ApiReturn);
+                    case "printall":
+                        Console.WriteLine("Enter Item Type: ");
+                        ItemType = Console.ReadLine();
+                        switch (ItemType.ToLower())
+                        {
+                            case "projects":
+                                ItemCount = ScanWorksAPI.sw_GetProjectCount();
+                                break;
+                            case "actions":
+                                ItemCount = ScanWorksAPI.sw_GetActionCount();
+                                break;
+                            case "sequences":
+                                ItemCount = ScanWorksAPI.sw_GetSequenceCount();
+                                break;
+                            case "designs":
+                                ItemCount = ScanWorksAPI.sw_GetDesignCount();
+                                break;
+                        }
+
+                        for (int i=0; i < ItemCount; i++)
+                        {
+                            switch (ItemType.ToLower())
+                            {
+                                case "projects":
+                                    ApiReturn = ScanWorksAPI.sw_GetProjectNameAt(i, ItemName);
+                                    break;
+                                case "actions":
+                                    ApiReturn = ScanWorksAPI.sw_GetActionNameAt(i, ItemName);
+                                    
+                                    break;
+                                case "sequences":
+                                    ApiReturn = ScanWorksAPI.sw_GetSequenceNameAt(i, ItemName);
+                                    break;
+                                case "designs":
+                                    ApiReturn = ScanWorksAPI.sw_GetDesignNameAt(i, ItemName);
+                                    break;
+                            }
+
+                            if (ApiReturn == 0)
+                            {
+                                Console.WriteLine("Item " + ItemType + " at: " + i + " is: \t" + ItemName.ToString());
+                            }
+                        }
+                        break;
+                    case "countall":
+                        Console.WriteLine("Enter Item Type: ");
+                        ItemType = Console.ReadLine();
+                        switch (ItemType.ToLower())
+                        {
+                            case "projects":
+                                ItemCount = ScanWorksAPI.sw_GetProjectCount();
+                                break;
+                            case "actions":
+                                ItemCount = ScanWorksAPI.sw_GetActionCount();
+                                break;
+                            case "sequences":
+                                ItemCount = ScanWorksAPI.sw_GetSequenceCount();
+                                break;
+                            case "designs":
+                                ItemCount = ScanWorksAPI.sw_GetDesignCount();
+                                break;
+                        }
+                        Console.WriteLine("Item " + ItemType + " total Count: " + ItemCount);
                         break;
                     case "exit":
+                        ApiReturn = ScanWorksAPI.sw_disconnect();
                         return;
                     default:
                         Console.WriteLine("Invalid Command");
@@ -113,6 +177,7 @@ namespace SwTCPInterface
             // User must send command,parameter1,parameter2...
             string[] UserData = msg.MessageString.Split(',');
             int ScanworksReturnCode;
+            int ItemCount = 0;
             switch (UserData[0]) // Switch the command
             {
                 case "connect": // Connect to the scanworks API (must be executed first)
@@ -136,21 +201,22 @@ namespace SwTCPInterface
                         ReturnMessage += "ERROR: Unable to Disconnect The Scanworks API\n";
                     }
                     break;
-                case "getcount": // Return the count of the selected item
-
-                    int ItemCount = 0;
-
+                case "countall": // Return the count of the selected item
                     try
                     {
                         switch (UserData[1]) // Select which type of object are we counting ... 
                         {
                             case "projects":
+                                ItemCount = ScanWorksAPI.sw_GetProjectCount();
                                 break;
                             case "actions":
+                                ItemCount = ScanWorksAPI.sw_GetActionCount();
                                 break;
                             case "sequences":
+                                ItemCount = ScanWorksAPI.sw_GetSequenceCount();
                                 break;
                             case "designs":
+                                ItemCount = ScanWorksAPI.sw_GetDesignCount();
                                 break;
                         }
                     }
@@ -171,6 +237,45 @@ namespace SwTCPInterface
                     {
                         ReturnMessage += "ERROR: Missing the parameter to define the project at \n";
                     }
+                    break;
+                case "printall":
+                    StringBuilder ItemName = new StringBuilder(1000);
+                    switch (UserData[1]) // Select which type of Object you want to print and count how many of those items there are
+                    {
+                        case "projects":
+                            ItemCount = ScanWorksAPI.sw_GetProjectCount();
+                            break;
+                        case "actions":
+                            ItemCount = ScanWorksAPI.sw_GetActionCount();
+                            break;
+                        case "sequences":
+                            ItemCount = ScanWorksAPI.sw_GetSequenceCount();
+                            break;
+                        case "designs":
+                            ItemCount = ScanWorksAPI.sw_GetDesignCount();
+                            break;
+                    }                    
+                    for (int i=0; i < ItemCount; i++) // Print all of the items 
+                    {
+                        ItemName.Clear(); // Clear the handler
+                        switch (UserData[1]) // Select which type of Object you want to print
+                        {
+                            case "projects":
+                                ScanworksReturnCode = ScanWorksAPI.sw_GetProjectNameAt(i,ItemName);
+                                break;
+                            case "actions":
+                                ScanworksReturnCode = ScanWorksAPI.sw_GetActionNameAt(i,ItemName);
+                                break;
+                            case "sequences":
+                                ScanworksReturnCode = ScanWorksAPI.sw_GetSequenceNameAt(i, ItemName);
+                                break;
+                            case "designs":
+                                ScanworksReturnCode = ScanWorksAPI.sw_GetDesignNameAt(i, ItemName);
+                                break;
+                        }
+                        ReturnMessage += "Item " + UserData[1] + " at: " + ItemName.ToString() + "\n";
+                    }
+
                     break;
                     
                 case "load": // Load either a Project, a design, or a file... 
@@ -212,8 +317,14 @@ namespace SwTCPInterface
                                 break;
 
                             }
-
-
+                        if (ScanworksReturnCode == 0)
+                        {
+                            ReturnMessage += "Successfull Load of " + UserData[1] + " at: " + UserData[2];
+                        }
+                        else
+                        {
+                            ReturnMessage += "ERROR at Item Loading, SW Error Code: " + ScanworksReturnCode + "\n";
+                        }
 
                     }
                     catch (IndexOutOfRangeException)
@@ -222,7 +333,19 @@ namespace SwTCPInterface
                     }
                     break;
 
-                case "none":
+                case "deleteproject":
+                    StringBuilder ProjName = new StringBuilder(1000);
+                    try
+                    {
+                        ProjName.Clear();
+                        ProjName.Append(UserData[1]);
+                        ScanworksReturnCode = ScanWorksAPI.sw_DeleteProject(ProjName);
+
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        ReturnMessage += "ERROR: Incorrect Parameter for Delete Operation \n";
+                    }
                     break;
                 default:
                     break;
