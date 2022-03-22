@@ -11,13 +11,13 @@ namespace ScanWorksAPILib
 	public class ScanWorksAPI
 	{
 		[DllImport("ScanWorksCOMServer.DLL", CharSet=CharSet.Ansi)]
-		public static extern int sw_connect();
+		public static extern int sw_connect(); // Implemented
 		[DllImport("ScanWorksCOMServer.DLL", CharSet=CharSet.Ansi)]
-		public static extern int sw_disconnect();
+		public static extern int sw_disconnect(); // Implemented
 		[DllImport("ScanWorksCOMServer.DLL", CharSet=CharSet.Ansi)]
-		public static extern int sw_GetProjectCount();
+		public static extern int sw_GetProjectCount(); // Implemented
 		[DllImport("ScanWorksCOMServer.DLL", CharSet=CharSet.Ansi)]
-		public static extern int sw_GetProjectNameAt(int counter,StringBuilder theName);
+		public static extern int sw_GetProjectNameAt(int counter,StringBuilder theName); // Implemented
 		[DllImport("ScanWorksCOMServer.DLL", CharSet=CharSet.Ansi)]
 		public static extern int sw_LoadProjectAt(int counter);
 		[DllImport("ScanWorksCOMServer.DLL", CharSet=CharSet.Ansi)]
