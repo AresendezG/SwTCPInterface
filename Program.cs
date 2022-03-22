@@ -152,9 +152,9 @@ namespace SwTCPInterface
                         }
                         break;
                     case "load":
-                        Console.WriteLine("Enter Item Type to load: [project|action|sequence|design]");
+                        Console.WriteLine("\nEnter Item Type to load: [project|action|sequence|design]");
                         ItemType = Console.ReadLine();
-                        Console.WriteLine("Enter Item Index to Load");
+                        Console.WriteLine("\nEnter Item Index to Load");
                         int ItemIndex = Convert.ToInt32(Console.ReadLine());
                         switch (ItemType.ToLower())
                         {
@@ -193,7 +193,7 @@ namespace SwTCPInterface
                         StringBuilder BackupPathParam = new StringBuilder(1000);
                         BackupPathParam.Clear();
                         BackupPathParam.Append(BackupPath);
-                        ApiReturn = ScanWorksAPI.sw_ExportProject(BackupPathParam, 1, 0, 0, 0);
+                        ApiReturn = ScanWorksAPI.sw_ExportProject(BackupPath, 1, 0, 0, 0);
 
                         if (ApiReturn == 0)
                         {
@@ -241,15 +241,41 @@ namespace SwTCPInterface
                         }
                         if (ApiReturn == 0)
                         {
-                            Console.WriteLine("Succesful Load");
+                            Console.WriteLine("PASS Result");
                         }
                         else
                         {
-                            Console.WriteLine("ERROR: Unable to load item" + ItemType + "\n" +
+                            Console.WriteLine("FAIL: during run of " + ItemType + " "+"\n" +
                                 "Error Code: " + ApiReturn + "\n" +
                                 "Error Message+" + ScanWorksAPI.ScanworksHandler(ApiReturn));
                         }
                         break;
+                    case "print_details":
+                        StringBuilder ReportName = new StringBuilder(500);
+                        StringBuilder ReportPath = new StringBuilder(500);
+
+                        ReportName.Append("DefaultReport");
+                        ReportPath.Append("c:\\working\\Backup\\details.txt");
+
+                        ApiReturn = ScanWorksAPI.sw_GetReportFileNameCount();
+                        for (int i=0; i < ApiReturn; i++)
+                        {
+                            Console.WriteLine("Available Report: \t" + ScanWorksAPI.sw_GetReportFileNameAt(i, ReportName, ReportName));
+                        }
+
+                        Console.WriteLine("\nExtended Details ");
+                        ApiReturn = ScanWorksAPI.sw_GetSequenceReportFile(ReportPath);
+                        if (ApiReturn == 0)
+                        {
+                            Console.WriteLine("Successfull Report Created");
+                        }
+                        else
+                        {
+                                Console.WriteLine("FAIL: during Report Build \n" +
+                                                  "Error Code: " + ApiReturn + "\n" +
+                                                  "Error Message+" + ScanWorksAPI.ScanworksHandler(ApiReturn));
+                        }
+                            break;
                     case "exit":
                         ApiReturn = ScanWorksAPI.sw_disconnect();
                         return;
@@ -357,6 +383,7 @@ namespace SwTCPInterface
                     break;
                 case "printall":
                     StringBuilder ItemName = new StringBuilder(1000);
+                    ScanworksReturnCode = -1000;
                     switch (UserData[1]) // Select which type of Object you want to print and count how many of those items there are
                     {
                         case "projects":
@@ -390,7 +417,16 @@ namespace SwTCPInterface
                                 ScanworksReturnCode = ScanWorksAPI.sw_GetDesignNameAt(i, ItemName);
                                 break;
                         }
-                        ReturnMessage += "Item " + UserData[1] + " at: " + ItemName.ToString() + "\n";
+                        if (ScanworksReturnCode == 0)
+                        {
+                            ReturnMessage += "Item " + UserData[1] + " at: \t" + ItemName.ToString() + "\n";
+                        }
+                        else
+                        {
+                            ReturnMessage += "ERROR: While displaying: " + UserData[1] + "\n" +
+                                "Error Code: " + ScanworksReturnCode;
+                        }
+
                     }
 
                     break;
@@ -400,35 +436,50 @@ namespace SwTCPInterface
                     ScanworksReturnCode = -4500;
                     try
                     {
-                        StringBuilder ObjectPath = new StringBuilder(1000);
-                        ObjectPath.Clear();
-                        ObjectPath.Append(UserData[2]); // The location of the desired file is at Parameter 2 (number)
+                        StringBuilder ObjectName = new StringBuilder(1000);
+                        ObjectName.Clear();
+                       //ObjectPath.Append(UserData[2]); // The location of the desired file is at Parameter 2 (number)
 
                         int SWItemIndex = Convert.ToInt32(UserData[2]);
 
                             switch (UserData[1]) // Define the type of item we want to load
                             {
                                 case "design":
-                                     if (SWItemIndex <= ScanWorksAPI.sw_GetDesignCount())
-                                        ScanworksReturnCode = ScanWorksAPI.sw_LoadDesignAt(SWItemIndex);
-                                     else
-                                        ReturnMessage += "ERROR: Invalid Design Index";
+                                if (SWItemIndex <= ScanWorksAPI.sw_GetDesignCount())
+                                {
+                                    ScanworksReturnCode = ScanWorksAPI.sw_GetDesignNameAt(SWItemIndex, ObjectName);
+                                    ScanworksReturnCode = ScanWorksAPI.sw_LoadDesignAt(SWItemIndex);
+                                }
+                                else
+                                    ReturnMessage += "ERROR: Invalid Design Index";
                                     break;
                                 case "project":
                                     if (SWItemIndex <= ScanWorksAPI.sw_GetProjectCount())
-                                        ScanworksReturnCode = ScanWorksAPI.sw_LoadProjectAt(SWItemIndex);
+                                {
+                                    ScanworksReturnCode = ScanWorksAPI.sw_GetProjectNameAt(SWItemIndex, ObjectName);
+                                    ScanworksReturnCode = ScanWorksAPI.sw_LoadProjectAt(SWItemIndex);
+                                }
+
                                     else
                                         ReturnMessage += "ERROR: Invalid Project Index";
                                     break;
                                 case "action":
                                     if (SWItemIndex <= ScanWorksAPI.sw_GetActionCount())
-                                        ScanworksReturnCode = ScanWorksAPI.sw_LoadActionAt(SWItemIndex);
+                                {
+                                    ScanworksReturnCode = ScanWorksAPI.sw_GetActionNameAt(SWItemIndex, ObjectName);
+                                    ScanworksReturnCode = ScanWorksAPI.sw_LoadActionAt(SWItemIndex);
+                                }
+
                                     else
                                         ReturnMessage += "ERROR: Invalid Action Index";
                                     break;
                                 case "sequence":
                                     if (SWItemIndex <= ScanWorksAPI.sw_GetSequenceCount())
-                                        ScanworksReturnCode = ScanWorksAPI.sw_LoadSequenceAt(SWItemIndex);
+                                {
+                                    ScanworksReturnCode = ScanWorksAPI.sw_GetSequenceNameAt(SWItemIndex, ObjectName);
+                                    ScanworksReturnCode = ScanWorksAPI.sw_LoadSequenceAt(SWItemIndex);
+                                }
+
                                     else
                                         ReturnMessage += "ERROR: Invalid Sequence Index";
                                 break;
@@ -440,7 +491,8 @@ namespace SwTCPInterface
                             }
                         if (ScanworksReturnCode == 0)
                         {
-                            ReturnMessage += "Successfull Load of " + UserData[1] + " at: " + UserData[2];
+                            ReturnMessage += "Successfull Load of " + UserData[1] + " at: " + UserData[2]+ "\n" +
+                                             "Item Name: "+ObjectName.ToString();
                         }
                         else
                         {
@@ -469,16 +521,16 @@ namespace SwTCPInterface
                     }
                     break;
                 case "run":
-                    //Console.WriteLine("Choose [Sequence|Action]");
-                    // = UserData[2];
-                    ScanworksReturnCode = -1000;
-                    switch (UserData[1].ToLower())
+                    // Console.WriteLine("Choose [Sequence|Action]");
+                    // UserData[2];
+                    // ScanworksReturnCode = -1000;
+                    switch (UserData[1].ToLower()) // Define if you want to run a sequence or action 
                     {
                         case "sequence":
-                            ScanworksReturnCode = ScanWorksAPI.sw_RunSequence();
+                            ScanworksReturnCode = ScanWorksAPI.sw_RunSequence(); // Seq must be already loaded
                             break;
                         case "action":
-                            ScanworksReturnCode = ScanWorksAPI.sw_RunAction();
+                            ScanworksReturnCode = ScanWorksAPI.sw_RunAction(); // Action must be already loaded
                             break;
                         default:
                             Console.WriteLine("ERROR: User Error, undefined type. Select [sequence|action] to run");
@@ -487,13 +539,20 @@ namespace SwTCPInterface
                     }
                     if (ScanworksReturnCode == 0)
                     {
-                        Console.WriteLine("Succesful Load");
+                        ReturnMessage += "PASS Result\n";
                     }
                     else
                     {
-                        Console.WriteLine("ERROR: Unable to load item" + UserData[1] + "\n" +
-                            "Error Code: " + ScanworksReturnCode + "\n" +
-                            "Error Message+" + ScanWorksAPI.ScanworksHandler(ScanworksReturnCode));
+                        if (ScanworksReturnCode == -41 && ScanworksReturnCode == -10) // This happens when the RUN command fails, but no error occurred
+                        {
+                            ReturnMessage += "FAIL Result\n";
+                        }
+                        else
+                        {
+                            ReturnMessage += "ERROR: during run Attempt " + UserData[1] + "\n" +
+                                "Error Code: " + ScanworksReturnCode + "\n" +
+                                "Error Message+" + ScanWorksAPI.ScanworksHandler(ScanworksReturnCode);
+                        }
                     }
                     break;
                 case "export":
@@ -502,7 +561,7 @@ namespace SwTCPInterface
                         StringBuilder PathToExport = new StringBuilder(1000);
                         PathToExport.Clear();
                         PathToExport.Append(UserData[1]);
-                        ScanworksReturnCode = ScanWorksAPI.sw_ExportProject(PathToExport, 1, 0, 0, 0);
+                        ScanworksReturnCode = ScanWorksAPI.sw_ExportProject(UserData[1], 1, 0, 0, 0);
 
                         if (ScanworksReturnCode == 0)
                         {
@@ -534,7 +593,8 @@ namespace SwTCPInterface
                     }
                     else
                     {
-                        ReturnMessage += "ERROR during Import. Error Code+ " + ScanWorksAPI.ScanworksHandler(ScanworksReturnCode);
+                        ReturnMessage += "ERROR: During Import\n" +
+                                         "Scanworks Error Message: " + ScanWorksAPI.ScanworksHandler(ScanworksReturnCode);
                     }
                     break;
 

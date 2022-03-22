@@ -59,9 +59,9 @@ namespace ScanWorksAPILib
 		[DllImport("ScanWorksCOMServer.DLL", CharSet = CharSet.Ansi)]
 		public static extern int sw_DeleteProject(String ProjectName);
 		[DllImport("ScanWorksCOMServer.DLL", CharSet = CharSet.Ansi)]
-		public static extern int sw_ImportProjectTo(String FileName, long ProjectNameSize, String ProjectName, String UseProjectName, String TargetDir);
+		public static extern int sw_ImportProjectTo(String FileName, int ProjectNameSize, String ProjectName, String UseProjectName, String TargetDir);
 		[DllImport("ScanWorksCOMServer.DLL", CharSet = CharSet.Ansi)]
-		public static extern int sw_ExportProject(StringBuilder FileName, long ExportType, long IncludeUserFiles, long Linked, long AllowOverwrite);
+		public static extern int sw_ExportProject(String FileName, int ExportType, int IncludeUserFiles, int Linked, int AllowOverwrite);
 
 
 		public ScanWorksAPI()
