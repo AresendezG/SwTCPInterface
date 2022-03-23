@@ -20,6 +20,14 @@ namespace ScanWorksAPILib
 		public static extern int sw_GetProjectNameAt(int counter,StringBuilder theName); // Implemented
 		[DllImport("ScanWorksCOMServer.DLL", CharSet=CharSet.Ansi)]
 		public static extern int sw_LoadProjectAt(int counter);
+		[DllImport("ScanWorksCOMServer.DLL", CharSet = CharSet.Ansi)]
+		public static extern int sw_LoadProject(String ProjectName); // Load a project by Name
+		[DllImport("ScanWorksCOMServer.DLL", CharSet = CharSet.Ansi)]
+		public static extern int sw_LoadDesign(String DesignName); // Load a project by Name
+		[DllImport("ScanWorksCOMServer.DLL", CharSet = CharSet.Ansi)]
+		public static extern int sw_LoadAction(String ActionName); // Load a project by Name
+		[DllImport("ScanWorksCOMServer.DLL", CharSet = CharSet.Ansi)]
+		public static extern int sw_LoadSequence(String SequenceName); // Load a project by Name
 		[DllImport("ScanWorksCOMServer.DLL", CharSet=CharSet.Ansi)]
 		public static extern int sw_GetDesignCount(); // Implemented as part of a routine
 		[DllImport("ScanWorksCOMServer.DLL", CharSet=CharSet.Ansi)]
@@ -149,6 +157,24 @@ namespace ScanWorksAPILib
 
 			return CodeMessage;
         }
+
+		public static void PrintResult(int StatusCode, string GenericMessage)
+        {
+			if (StatusCode == 0) // Successful Code
+			{
+				Console.WriteLine("<< Successfull "+GenericMessage+" >>");
+				Console.WriteLine("ScanworksReturn: " + StatusCode);
+				Console.WriteLine("\n >>");
+			}
+			else
+			{
+				Console.WriteLine("ERROR: During Attempt to: " + GenericMessage);
+				Console.WriteLine("API Message " + ScanWorksAPI.ScanworksHandler(StatusCode));
+				Console.WriteLine("ScanworksReturn: " + StatusCode);
+				Console.WriteLine("\n >>");
+			}
+		}
+
 
 	}
 }

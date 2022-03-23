@@ -61,14 +61,16 @@ namespace SwTCPInterface
                 {
                     case "connect":
                         ApiReturn = ScanWorksAPI.sw_connect();
-                        Console.WriteLine("API Return for Connect: " + ApiReturn);
+                        ScanWorksAPI.PrintResult(ApiReturn, "Connection to API");
                         break;
                     case "disconnect":
                         ApiReturn = ScanWorksAPI.sw_disconnect();
-                        Console.WriteLine("API Return for Disconnect: " + ApiReturn);
+                        ScanWorksAPI.PrintResult(ApiReturn, "Disconnection from API");
+
                         break;
                     case "printall":
-                        Console.WriteLine("Enter Item Type: ");
+                        Console.WriteLine("To display Sequences and Actions, a Project and Design must be loaded");
+                        Console.WriteLine("Enter Item to Print [projects|designs|sequences|actions]: >");
                         ItemType = Console.ReadLine();
                         switch (ItemType.ToLower())
                         {
@@ -112,7 +114,7 @@ namespace SwTCPInterface
                         }
                         break;
                     case "countall":
-                        Console.WriteLine("Enter Item Type: ");
+                        Console.WriteLine("Enter item type to Count [projects|actions|sequences|designs]: >");
                         ItemType = Console.ReadLine();
                         switch (ItemType.ToLower())
                         {
@@ -134,58 +136,44 @@ namespace SwTCPInterface
                                 break;
                         }
                         Console.WriteLine("Item " + ItemType + " total Count: " + ItemCount);
+                        Console.WriteLine("ScanworksReturn: " + ItemCount);
+                        Console.WriteLine("\n >>");
                         break;
                     case "import":
-                        Console.WriteLine("Enter Project Path:");
+                        Console.WriteLine("Enter Project Path: >");
                         string ProjectPath = Console.ReadLine();
-                        Console.WriteLine("Enter ProjectName to Use");
+                        Console.WriteLine("Enter ProjectName to Use: >");
                         string ProjectNameToUse = Console.ReadLine();
                         ApiReturn = ScanWorksAPI.sw_ImportProjectTo(ProjectPath, 1024, ProjectNameToUse, ProjectNameToUse, "");
-                        
-                        if (ApiReturn == 0)
-                        {
-                            Console.WriteLine("Successful import of the Project: " + ProjectNameToUse);
-                        }
-                        else
-                        {
-                            Console.WriteLine("ERROR during Import. Error Code+ " + ScanWorksAPI.ScanworksHandler(ApiReturn));
-                        }
+                        ScanWorksAPI.PrintResult(ApiReturn, "Import of " + ProjectNameToUse);
+
                         break;
                     case "load":
-                        Console.WriteLine("\nEnter Item Type to load: [project|action|sequence|design]");
+                        Console.WriteLine("\nEnter Item Type to load [project|action|sequence|design]: >");
                         ItemType = Console.ReadLine();
-                        Console.WriteLine("\nEnter Item Index to Load");
-                        int ItemIndex = Convert.ToInt32(Console.ReadLine());
+                        Console.WriteLine("\nEnter Item Name to Load: >");
+                        //int ItemIndex = Convert.ToInt32(Console.ReadLine());
+                        string InputItem = Console.ReadLine();
                         switch (ItemType.ToLower())
                         {
                             case "project":
-                                ApiReturn = ScanWorksAPI.sw_LoadProjectAt(ItemIndex);
+                                ApiReturn = ScanWorksAPI.sw_LoadProject(InputItem);
                                 break;
                             case "action":
-                                ApiReturn = ScanWorksAPI.sw_LoadActionAt(ItemIndex);
+                                ApiReturn = ScanWorksAPI.sw_LoadAction(InputItem);
                                 break;
                             case "sequence":
-                                ApiReturn = ScanWorksAPI.sw_LoadSequenceAt(ItemIndex);
+                                ApiReturn = ScanWorksAPI.sw_LoadSequence(InputItem);
                                 break;
                             case "design":
-                                ApiReturn = ScanWorksAPI.sw_LoadDesignAt(ItemIndex);
+                                ApiReturn = ScanWorksAPI.sw_LoadDesign(InputItem);
                                 break;
                             default:
-                                Console.WriteLine("Wrong Type of Item. Select from [project|action|sequence|design]");
+                                Console.WriteLine("<< ERROR: Wrong Type of Item. Select from [project|action|sequence|design] >>");
                                 ApiReturn = -500;
                                 break;
                         }
-                        if (ApiReturn == 0)
-                        {
-                            Console.WriteLine("Succesful Load");
-
-                        }
-                        else
-                        {
-                            Console.WriteLine("ERROR: Unable to load item" + ItemType + "\n" +
-                                "Error Code: " + ApiReturn + "\n" +
-                                "Error Message+" + ScanWorksAPI.ScanworksHandler(ApiReturn));
-                        }
+                        ScanWorksAPI.PrintResult(ApiReturn, "Load Item");
                         break;
                     case "export":
                         Console.WriteLine("Enter the Backup Path");
@@ -194,36 +182,18 @@ namespace SwTCPInterface
                         BackupPathParam.Clear();
                         BackupPathParam.Append(BackupPath);
                         ApiReturn = ScanWorksAPI.sw_ExportProject(BackupPath, 1, 0, 0, 0);
+                        ScanWorksAPI.PrintResult(ApiReturn, "Export Project");
 
-                        if (ApiReturn == 0)
-                        {
-                            Console.WriteLine("\nSuccessfull Export\n");
-                        }
-                        else
-                        {
-                            Console.WriteLine("\nERROR: Unable to export\n" +
-                                "Scanworks Error Code:" + ApiReturn + "\n" +
-                                "Scanworks Error msg: " + ScanWorksAPI.ScanworksHandler(ApiReturn));
-                        }
                         break;
                     case "delete":
-                        Console.WriteLine("Enter the Project Name to Delete");
+                        Console.WriteLine("Enter the Project Name to Delete: ");
                         string DeleteName = Console.ReadLine();
                         ApiReturn = ScanWorksAPI.sw_DeleteProject(DeleteName);
+                        ScanWorksAPI.PrintResult(ApiReturn, "Deletion of Project " + DeleteName);
                         
-                        if (ApiReturn == 0)
-                        {
-                            Console.WriteLine("Successful Deleted of the Project: " + DeleteName);
-                        }
-                        else
-                        {
-                            Console.WriteLine("ERROR: Unable to delete the project\n" +
-                                "Scanworks Error Code:" + ApiReturn + "\n" +
-                                "Scanworks Error Msg:" + ScanWorksAPI.ScanworksHandler(ApiReturn));
-                        }
                         break;
                     case "run":
-                        Console.WriteLine("Choose [Sequence|Action]");
+                        Console.WriteLine("Choose to run [Sequence|Action]: >");
                         ItemType = Console.ReadLine();
                         ApiReturn = -1000;
                         switch (ItemType.ToLower())
@@ -242,12 +212,25 @@ namespace SwTCPInterface
                         if (ApiReturn == 0)
                         {
                             Console.WriteLine("PASS Result");
+                            Console.WriteLine("ScanworksReturn: " + ApiReturn);
+                            Console.WriteLine("\n >>");
                         }
                         else
                         {
-                            Console.WriteLine("FAIL: during run of " + ItemType + " "+"\n" +
-                                "Error Code: " + ApiReturn + "\n" +
-                                "Error Message+" + ScanWorksAPI.ScanworksHandler(ApiReturn));
+                            if (ApiReturn == -41 || ApiReturn == -10)
+                            {
+                                Console.WriteLine("FAIL Result");
+                                Console.WriteLine("ScanworksReturn: " + ApiReturn);
+                                Console.WriteLine("\n >>");
+                            }
+                            else
+                            {
+                                Console.WriteLine("ERROR: during run of " + ItemType + " " + "\n" +
+                                    "Error Code: " + ApiReturn + "\n" +
+                                    "Error Message+" + ScanWorksAPI.ScanworksHandler(ApiReturn));
+                                Console.WriteLine("ScanworksReturn: " + ApiReturn);
+                                Console.WriteLine("\n >>");
+                            }
                         }
                         break;
                     case "print_details":
@@ -280,7 +263,7 @@ namespace SwTCPInterface
                         ApiReturn = ScanWorksAPI.sw_disconnect();
                         return;
                     default:
-                        Console.WriteLine("Invalid Command");
+                        Console.WriteLine("ERROR: Invalid Command");
                         break;
                 }
 
@@ -327,7 +310,7 @@ namespace SwTCPInterface
                     ScanworksReturnCode = ScanWorksAPI.sw_connect();
                     if (ScanworksReturnCode == 0)
                     {
-                        ReturnMessage += "Scanworks API Connected \n";
+                        ReturnMessage += "Scanworks API Connected\n";
                     }
                     else
                     {
