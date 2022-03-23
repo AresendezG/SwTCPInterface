@@ -112,6 +112,10 @@ namespace SwTCPInterface
                                 Console.WriteLine("Item " + ItemType + " at: " + i + " is: \t" + ItemName.ToString());
                             }
                         }
+                        Console.WriteLine("Item " + ItemType + " total Count: " + ItemCount);
+                        Console.WriteLine("ScanworksReturn: " + ItemCount);
+                        Console.WriteLine("\n >>");
+
                         break;
                     case "countall":
                         Console.WriteLine("Enter item type to Count [projects|actions|sequences|designs]: >");
