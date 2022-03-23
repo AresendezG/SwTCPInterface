@@ -162,9 +162,9 @@ namespace ScanWorksAPILib
         {
 			if (StatusCode == 0) // Successful Code
 			{
-				Console.WriteLine("<< Successfull "+GenericMessage+" >>");
+				Console.WriteLine("<-< Successfull "+GenericMessage+" >->"); //Distinguish characters from the actual response
 				Console.WriteLine("ScanworksReturn: " + StatusCode);
-				Console.WriteLine("\n >>");
+				Console.WriteLine("\n >>"); //Ending character
 			}
 			else
 			{
@@ -173,6 +173,24 @@ namespace ScanWorksAPILib
 				Console.WriteLine("ScanworksReturn: " + StatusCode);
 				Console.WriteLine("\n >>");
 			}
+		}
+
+		public static string FormatStatusTCP(int StatusCode, string GenericMessage)
+		{
+			string ReturnString = "";
+
+			if (StatusCode == 0) // Successful Code
+			{
+				ReturnString += "<-< Successfull " + GenericMessage + " >-> \n"; //Distinguish characters from the actual response
+				ReturnString += "ScanworksReturn: " + StatusCode + "\n\n >>";
+			}
+			else
+			{
+				ReturnString += "ERROR: During Attempt to: " + GenericMessage +"\n";
+				ReturnString += "API Message " + ScanWorksAPI.ScanworksHandler(StatusCode)+"\n";
+				ReturnString += "ScanworksReturn: " + StatusCode+"\n";				
+			}
+			return ReturnString;
 		}
 
 
