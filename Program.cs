@@ -8,10 +8,22 @@ using ScanWorksAPILib;
 using System.Net.Sockets;
 using System.IO;
 
+/*
+ * Asset Scanworks SimpleTCP Interface using COMServer
+ * Author: Esli Alejandro Resendez
+ * In order to run a sequence or action from Scanworks, you must always follow this sequence:
+ * 1. Load the Project
+ * 2. Load the Design
+ * 3. Load either the Action or Sequence 
+ * 4. Run the action or sequence
+ 
+ */
+
 namespace SwTCPInterface
 {
     class Program
     {
+        public static bool TCPServiceRunning;
         static void Main(string[] args)
         {
             string UserOption="none";
@@ -24,6 +36,8 @@ namespace SwTCPInterface
                 Delimiter = 0x13, // HEX Value for Enter
                 StringEncoder = Encoding.UTF8
             };
+
+            Console.WriteLine("---- Scanworks 3.1xx Console and TCP Interface ----");
             //ScanWorksAPI ScanworksMgr; 
             try
             {
@@ -31,8 +45,9 @@ namespace SwTCPInterface
                 {
                     if (StartServer(ServerObject))
                     {
-                        Console.WriteLine("TCP Server Listening at Port: 12012");
                         ServerObject.DataReceived += ServerDataReceived;
+                        Console.WriteLine("TCP Server Listening at Port: 12012");
+                        TCPServiceRunning = true;
                     }
                     else
                     {
@@ -55,15 +70,15 @@ namespace SwTCPInterface
                 StringBuilder ItemName = new StringBuilder(1000);
                 Console.WriteLine("Type your Option:");
                 UserOption = Console.ReadLine();
-                UserOption = UserOption.ToLower();
+                UserOption = UserOption.ToLower(); // Use all the user options in Lowercase
 
                 switch (UserOption)
                 {
-                    case "connect":
+                    case "connect": // Scanworks GUI must be closed, and only one connection at the time
                         ApiReturn = ScanWorksAPI.sw_connect();
                         ScanWorksAPI.PrintResult(ApiReturn, "Connection to API");
                         break;
-                    case "disconnect":
+                    case "disconnect": // Close session
                         ApiReturn = ScanWorksAPI.sw_disconnect();
                         ScanWorksAPI.PrintResult(ApiReturn, "Disconnection from API");
 
@@ -241,7 +256,7 @@ namespace SwTCPInterface
                                 ApiReturn = ScanWorksAPI.sw_RunAction();
                                 break;
                             default:
-                                Console.WriteLine("ERROR: User Error, undefined type. Select [sequence|action] to run >>");
+                                Console.WriteLine("ERROR: User Error, undefined Item Type. Select from [sequence|action] to run >>");
                                 ApiReturn = -1500;
                                 break;
                         }
@@ -298,6 +313,23 @@ namespace SwTCPInterface
                     case "exit":
                         ApiReturn = ScanWorksAPI.sw_disconnect();
                         return;
+                    case "launchtcp":
+                        if (TCPServiceRunning)
+                        {
+                            Console.WriteLine("TCP Server already working. Listening at Port 12012");
+                        }
+                        else
+                        {
+                            if (StartServer(ServerObject))
+                            {
+                                Console.WriteLine("TCP Server listening at Port 12012");
+                            }
+                            else
+                            {
+                                Console.WriteLine("ERROR: Unable to Start TCP Server");
+                            }
+                        }
+                        break;
                     default:
                         Console.WriteLine("ERROR: Invalid Command");
                         break;
